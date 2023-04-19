@@ -1,0 +1,121 @@
+class AlgebraLiniowa:
+    def __init__(self, wektor=None, macierz=None):
+        self.wektor = wektor
+        self.macierz = macierz
+
+    # Dodawanie wektorów
+    def dodawanie_wektorow(self, v1, v2):
+        if len(v1) != len(v2):
+            raise ValueError("Wektory mają różne wymiary.")
+        return [v1[i] + v2[i] for i in range(len(v1))]
+
+    # Odejmowanie wektorów
+    def odejmowanie_wektorow(self, v1, v2):
+        if len(v1) != len(v2):
+            raise ValueError("Wektory mają różne wymiary.")
+        return [v1[i] - v2[i] for i in range(len(v1))]
+
+    # Mnożenie wektorów
+    def skalar_wektor(self, skalar, wektor):
+        return [skalar * i for i in wektor]
+
+    # Mnożenie macierzy
+    def mnozenie_macierzy(self, m1, m2):
+        if len(m1[0]) != len(m2):
+            raise ValueError("Nie można pomnożyć macierzy.")
+        result = []
+        for i in range(len(m1)):
+            row = []
+            for j in range(len(m2[0])):
+                row.append(sum([m1[i][k] * m2[k][j] for k in range(len(m2))]))
+            result.append(row)
+        return result
+
+    # Macierz transponowana
+    def macierz_transponowana(self, macierz):
+        return [list(i) for i in zip(*macierz)]
+
+# Interfejs konsolowy CLI
+if __name__ == "__main__":
+    al = AlgebraLiniowa()
+
+    print("Algebra liniowa CLI")
+    print("=================")
+
+    # Panel wyboru
+    while True:
+        print("\nWybierz w czym moge pomóc:")
+        print("1. Dodaj dwa wektory")
+        print("2. Odejmij dwa wektory")
+        print("3. Pomnóż skalar poprzez wektor")
+        print("4. Pomnóż dwie macierze")
+        print("5. Transponuj macierz")
+        print("6. Koniec")
+
+        choice = int(input("Wybierz pozycje (1-6): "))
+
+        if choice == 1:
+            v1 = list(map(int, input("Podaj pierwszy wektor: ").split()))
+            v2 = list(map(int, input("Podaj drugi wektor: ").split()))
+            result = al.dodawanie_wektorow(v1, v2)
+            print("Wynik: ", result)
+
+        elif choice == 2:
+            v1 = list(map(int, input("Podaj pierwszy wektor: ").split()))
+            v2 = list(map(int, input("Podaj drugi wektor: ").split()))
+            result = al.dodawanie_wektorow(v1, v2)
+            print("Wynik: ", result)
+
+
+        elif choice == 3:
+
+            skalar = int(input("Podaj wilekość skalaru: "))
+
+            wektor = list(map(int, input("Podaj wektor: ").split()))
+
+            result = al.skalar_wektor(skalar, wektor)
+
+            print("Wynik: ", result)
+
+
+        elif choice == 4:
+
+            m1 = [list(map(int, input("Podaj pierwszy wiersz macierzy 1: ").split()))]
+
+            m1 += [list(map(int, input(f"Podaj wiersz {i + 2} z macierzy 1: ").split())) for i in range(len(m1[0]) - 1)]
+
+            m2 = [list(map(int, input("Podaj pierwszy wiersz macierzy 2: ").split()))]
+
+            m2 += [list(map(int, input(f"Podaj wiersz {i + 2} macierzy 2: ").split())) for i in range(len(m2[0]) - 1)]
+
+            result = al.mnozenie_macierzy(m1, m2)
+
+            print("Wynik: ")
+
+            for i in result:
+                print(*i)
+
+
+        elif choice == 5:
+
+            macierz = [list(map(int, input("Podaj pierwszy wiersz macierzy: ").split()))]
+
+            macierz += [list(map(int, input(f"Podaj wiersz {i + 2} macierzy: ").split())) for i in
+                       range(len(macierz[0]) - 1)]
+
+            result = al.macierz_transponowana(macierz)
+
+            print("Wynik: ")
+
+            for i in result:
+                print(*i)
+
+
+        elif choice == 6:
+            print("Koniec obliczeń na dziś")
+
+            break
+
+        else:
+
+            print("Niepoprawny wybór.")
