@@ -1,0 +1,172 @@
+import yfinance as yf
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.stattools import adfuller, kpss
+
+# Pobieranie danych
+symbol = 'AAPL'
+data = yf.download(symbol, start='2018-01-01', end='2023-01-01')['Close']
+
+# Wstępna analiza danych
+print(data.head())
+data.plot(title=f'Ceny akcji {symbol}', figsize=(10, 6))
+plt.show()
+
+# Dekompozycja szeregu czasowego
+decomposition = sm.tsa.seasonal_decompose(data, model='additive')
+decomposition.plot()
+plt.show()
+
+# Modelowanie ARIMA
+def test_stationarity(timeseries):
+    # Test ADF
+    adf_result = adfuller(timeseries)
+    print(f'ADF Statistic: {adf_result[0]}')
+    print(f'p-value: {adf_result[1]}')
+    for key, value in adf_result[4].items():
+        print(f'Critical Values {key}: {value}')
+    
+    # Test KPSS
+    kpss_result = kpss(timeseries)
+    print(f'KPSS Statistic: {kpss_result[0]}')
+    print(f'p-value: {kpss_result[1]}')
+    for key, value in kpss_result[3].items():
+        print(f'Critical Values {key}: {value}')
+
+test_stationarity(data)
+
+# Jeśli dane są niestacjonarne, zastosuj różnicowanie
+data_diff = data.diff().dropna()
+test_stationarity(data_diff)
+
+# ACF i PACF w celu określenia rzędów modelu, wykres ACF i PACF
+plot_acf(data_diff)
+plot_pacf(data_diff)
+plt.show()
+
+# Dopasowanie modelu ARIMA
+model = ARIMA(data, order=(5, 1, 0))  # Na podstawie ACF i PACF ustalamy rząd (p, d, q)
+results = model.fit()
+
+# Ocena modelu
+print(results.summary())
+
+# Prognozowanie
+forecast = results.get_forecast(steps=30)
+forecast_values = forecast.predicted_mean
+conf_int = forecast.conf_int()
+
+# Średni wiek
+mean_age = df['Wiek'].mean()
+
+# Rozkład płci
+gender_distribution = df['Płeć'].value_counts()
+
+# Dominujący poziom wykształcenia
+education_mode = df['Wykształcenie'].mode()[0]
+
+# Podział na grupy wiekowe
+age_bins = [18, 25, 35, 45, 55, 65]
+age_labels = ['18-25', '26-35', '36-45', '46-55', '56-65']
+df['Grupa_wiekowa'] = pd.cut(df['Wiek'], bins=age_bins, labels=age_labels)
+
+# Analiza rozkładu płci w grupach wiekowych
+age_gender_distribution = df.groupby(['Grupa_wiekowa', 'Płeć']).size().unstack()
+
+# Analiza poziomu wykształcenia w grupach wiekowych i płciowych
+age_education_distribution = df.groupby(['Grupa_wiekowa', 'Wykształcenie']).size().unstack()
+gender_education_distribution = df.groupby(['Płeć', 'Wykształcenie']).size().unstack()
+
+# Wyświetlanie wyników
+print(f"Średni wiek: {mean_age:.2f} lat")
+print("\nRozkład płci:\n", gender_distribution)
+print(f"\nDominujący poziom wykształcenia: {education_mode}")
+
+plt.figure(figsize=(12, 8))
+
+# Wykres rozkładu płci
+plt.subplot(2, 2, 1)
+gender_distribution.plot(kind='bar', color=['blue', 'pink'])
+plt.title('Rozkład płci')
+plt.xlabel('Płeć')
+plt.ylabel('Liczba osób')
+
+# Wykres rozkładu płci w grupach wiekowych
+plt.subplot(2, 2, 2)
+age_gender_distribution.plot(kind='bar', stacked=True)
+plt.title('Rozkład płci w grupach wiekowych')
+plt.xlabel('Grupa wiekowa')
+plt.ylabel('Liczba osób')
+
+# Wykres poziomu wykształcenia w grupach wiekowych
+plt.subplot(2, 2, 3)
+age_education_distribution.plot(kind='bar', stacked=True)
+plt.title('Poziom wykształcenia w grupach wiekowych')
+plt.xlabel('Grupa wiekowa')
+plt.ylabel('Liczba osób')
+
+# Wykres poziomu wykształcenia w grupach płciowych
+plt.subplot(2, 2, 4)
+gender_education_distribution.plot(kind='bar', stacked=True, color=['red', 'green', 'blue', 'purple'])
+plt.title('Poziom wykształcenia w grupach płciowych')
+plt.xlabel('Płeć')
+plt.ylabel('Liczba osób')
+
+plt.tight_layout()
+plt.show()
+
+# Podstawowe statystyki finansowe
+mean_financial_stats = df[['Roczny_dochód', 'Wydatki_mieszkanie', 'Wydatki_żywność', 'Wydatki_transport', 'Wydatki_edukacja', 'Kredyty', 'Oszczędności', 'Inwestycje_akcje', 'Inwestycje_nieruchomości']].mean()
+
+# Analiza porównawcza
+
+# Dochody i wydatki w grupach wiekowych
+income_expense_age = df.groupby('Grupa_wiekowa')[['Roczny_dochód', 'Wydatki_mieszkanie', 'Wydatki_żywność', 'Wydatki_transport', 'Wydatki_edukacja']].mean()
+
+# Dochody i wydatki w grupach płciowych
+income_expense_gender = df.groupby('Płeć')[['Roczny_dochód', 'Wydatki_mieszkanie', 'Wydatki_żywność', 'Wydatki_transport', 'Wydatki_edukacja']].mean()
+
+# Dochody i wydatki w grupach poziomu wykształcenia
+income_expense_education = df.groupby('Wykształcenie')[['Roczny_dochód', 'Wydatki_mieszkanie', 'Wydatki_żywność', 'Wydatki_transport', 'Wydatki_edukacja']].mean()
+
+# Zależność między dochodem a oszczędnościami
+income_savings_corr = df[['Roczny_dochód', 'Oszczędności']].corr().iloc[0, 1]
+
+# Zależność między wydatkami na mieszkanie a zadłużeniem
+housing_debt_corr = df[['Wydatki_mieszkanie', 'Kredyty']].corr().iloc[0, 1]
+
+# Wyświetlanie wyników
+print("Podstawowe statystyki finansowe:\n", mean_financial_stats)
+print(f"\nZależność między dochodem a oszczędnościami: {income_savings_corr:.2f}")
+print(f"Zależność między wydatkami na mieszkanie a zadłużeniem: {housing_debt_corr:.2f}")
+
+# Wykresy
+plt.figure(figsize=(16, 10))
+
+# Wykres porównawczy dochodów i wydatków w grupach wiekowych
+plt.subplot(2, 2, 1)
+income_expense_age.plot(kind='bar')
+plt.title('Dochody i wydatki w grupach wiekowych')
+plt.xlabel('Grupa wiekowa')
+plt.ylabel('Średnia kwota (PLN)')
+
+# Wykres porównawczy dochodów i wydatków w grupach płciowych
+plt.subplot(2, 2, 2)
+income_expense_gender.plot(kind='bar', color=['blue', 'orange', 'green', 'red', 'purple'])
+plt.title('Dochody i wydatki w grupach płciowych')
+plt.xlabel('Płeć')
+plt.ylabel('Średnia kwota (PLN)')
+
+# Wykres porównawczy dochodów i wydatków w grupach poziomu wykształcenia
+plt.subplot(2, 2, 3)
+income_expense_education.plot(kind='bar', stacked=True)
+plt.title('Dochody i wydatki w grupach poziomu wykształcenia')
+plt.xlabel('Poziom wykształcenia')
+plt.ylabel('Średnia kwota (PLN)')
+
+plt.tight_layout()
+plt.show()
